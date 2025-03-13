@@ -20,8 +20,10 @@ module OmniAuth
         authorize_url: "/api/oauth/getcode",
         token_url: "/oauth/token",
         business_url: "/api/v3/business/service/list-business",
+        department_url: "/go-api/v1/business/service/account-detail"
       }
       option :businesses, []
+      option :departments, {}
       option :auto_block,
       {
         enabled: false,
@@ -60,6 +62,7 @@ module OmniAuth
         hash = {}
         hash[:id_info] = user_path
         hash[:business_info] = business_info
+        hash[:deepartment_info] = deepartment_info
         if business_info['data'].empty?
           gitlab_auto_block
           raise "Forbidden. Unauthorized access restricted."
@@ -77,6 +80,10 @@ module OmniAuth
 
       def business_info
         @business_info ||= access_token.get(options.client_options[:business_url]).parsed
+      end
+
+      def deepartment_info
+        @department_info || access_token.get(options.client_options[:department_url]).parsed
       end
   
       def authorize_params
@@ -100,12 +107,35 @@ module OmniAuth
         end
 
         def check_business
+          # Check department 1st if configured
+          if !options.departments.empty?
+            return check_department
+          end
+
+          # Check business 2nd
           return true unless !options.businesses.empty?
           b_set = options.businesses.to_set
           business_info['data'].each do |b|
             id = b[:id]
             if b_set.include?(id)
               return true
+            end
+          end
+          false
+        end
+
+        def check_department
+          deepartment_info['data']['business_lists'].each do |b|
+            b_id = b[:id]
+            if options.departments.include?(b_id)
+              # Option
+              dept_set = options.departments[b_id].to_set
+              b[:account_roles].each do |a|
+                if dept_set.include?(a[:dept_id])
+                  log :info, "Match account department_id: #{a[:dept_id]} at biz_id: #{b_id}"
+                  return true
+                end
+              end
             end
           end
           false
