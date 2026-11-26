@@ -2,8 +2,5 @@
 
 source "https://rubygems.org"
 
+# Runtime dependencies are declared in the gemspec only.
 gemspec
-
-gem "omniauth-oauth2", "~> 1.8"
-gem "rake", "~> 13.0"
-gem 'faraday', '~> 2.12', '>= 2.12.2'
