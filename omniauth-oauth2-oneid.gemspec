@@ -23,6 +23,18 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'omniauth-oauth2', '~> 1.8'
-  spec.add_dependency 'rake', '~> 13.2'
-  spec.add_dependency 'faraday', '~> 2.12', '>= 2.12.2'
+  # Security floors for transitive dependencies:
+  # omniauth >= 2.2.0: CVE-2026-63183 (Host header injection; callback_url uses full_host)
+  spec.add_dependency 'omniauth', '>= 2.2.0', '< 3'
+  # oauth2 >= 2.0.22: CVE-2026-54603 (bearer token leaked on protocol-relative redirect)
+  spec.add_dependency 'oauth2', '>= 2.0.22', '< 3'
+  # faraday >= 2.14.3: CVE-2026-25765, CVE-2026-33637, CVE-2026-54297
+  spec.add_dependency 'faraday', '~> 2.14', '>= 2.14.3'
+
+  spec.add_development_dependency 'rake', '~> 13.2'
+  spec.add_development_dependency 'minitest', '>= 5.20', '< 7'
+  spec.add_development_dependency 'rack-test', '~> 2.1'
+  spec.add_development_dependency 'rack-session', '>= 2.0', '< 3'
+  spec.add_development_dependency 'webmock', '~> 3.23'
+  spec.add_development_dependency 'bundler-audit', '~> 0.9'
 end
